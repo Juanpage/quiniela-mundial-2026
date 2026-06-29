@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚽ Pronóstico Mundialista Visiting Galápagos </title>
+<title>⚽ Pronóstico Mundialista Visiting Galápagos</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; min-height: 100vh; }
@@ -180,7 +180,7 @@
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwUywygBO1gxQhRdCrkFU5xv7uvZm6Pl7JgsLrkYN6obIQ-1Hzo2PGcBYmLEtJrXaE3Sw/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzRHTt52mGmeO-Bz9kSP4AndEJVyTVUZFe7zGF9sCHt4YEdZsYlZDWehq_MKVXOtakfzg/exec';
 
 const PARTIDOS = [
   { id:'p01', dia:'Dom 29 jun', h:'🇨🇦 Canadá',          a:'🇿🇦 Sudáfrica',       today:true  },
@@ -419,8 +419,30 @@ function showToast(id, msg, ok) {
   setTimeout(() => t.className = 'toast', 4000);
 }
 
+// ── CARGAR RESULTADOS DESDE SHEETS AL INICIAR ────────
+async function cargarResultados() {
+  try {
+    const res  = await fetch(SHEET_URL + '?action=resultados');
+    const json = await res.json();
+    if (json.resultados) {
+      resultados = json.resultados;
+      localStorage.setItem('q26_res', JSON.stringify(resultados));
+    }
+  } catch(e) {
+    // sin conexion: usa los locales
+  } finally {
+    renderForm();
+  }
+}
+
 // INIT
-renderForm();
+cargarResultados();
 </script>
+
+<footer style="background:#0f3460;color:rgba(255,255,255,.6);text-align:center;padding:1.25rem;font-size:12px;margin-top:2rem;">
+  <div style="font-weight:700;color:white;font-size:14px;margin-bottom:4px">⚽ Pronóstico Mundialista Visiting Galápagos</div>
+  <div>Dieciseisavos de Final · Copa del Mundo 2026</div>
+  <div style="margin-top:8px;font-size:11px;opacity:.6">Desarrollado por <strong style="color:white">Web Master JRGL</strong></div>
+</footer>
 </body>
 </html>

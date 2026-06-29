@@ -322,17 +322,27 @@ async function guardarPronostico() {
   btn.innerHTML = '💾 Guardar mi pronóstico';
 }
 
-// ── RANKING DESDE GOOGLE SHEETS ───────────────────────
+// ── RANKING DESDE CSV PÚBLICO DE GOOGLE SHEETS ────────
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTJ8JZc8FlpPIeUyALcu_rZZ0hlUTAvCFE342Ve93ALZ3_65PRu5rOeNf2TEuHPFslPZ3Iyt_CsbNvg/pub?gid=0&single=true&output=csv';
+
 async function cargarRanking() {
-  document.getElementById('rank-body').innerHTML = '<div class="empty-rank">⏳ Cargando ranking desde Google Sheets...</div>';
+  document.getElementById('rank-body').innerHTML = '<div class="empty-rank">⏳ Cargando ranking...</div>';
   document.getElementById('st-n').textContent = '—';
   document.getElementById('st-p').textContent = '—';
   document.getElementById('st-g').textContent = '—';
 
   try {
-    const res = await fetch(SHEET_URL + '?action=ranking');
-    const json = await res.json();
-    renderRanking(json.participantes || []);
+    const res  = await fetch(CSV_URL + '&t=' + Date.now()); // evita caché
+    const text = await res.text();
+    const filas = text.trim().split('\n').slice(1); // saltar encabezado
+    const lista = [];
+    filas.forEach(fila => {
+      const cols = fila.split(',');
+      const nombre = (cols[1] || '').replace(/"/g,'').trim();
+      const puntos = parseInt((cols[18] || '0').replace(/"/g,'').trim()) || 0;
+      if (nombre) lista.push({ nombre, puntos });
+    });
+    renderRanking(lista);
   } catch(e) {
     document.getElementById('rank-body').innerHTML = '<div class="empty-rank">❌ No se pudo cargar. Verifica conexión.</div>';
   }

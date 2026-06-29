@@ -142,10 +142,20 @@
 
 <!-- RESULTADOS -->
 <div id="tab-resultados" class="page">
+  <div id="admin-lock" style="text-align:center;padding:2rem 1rem">
+    <div style="font-size:40px;margin-bottom:1rem">🔒</div>
+    <div style="font-size:16px;font-weight:700;color:#0f3460;margin-bottom:1rem">Área del Organizador</div>
+    <input type="password" id="admin-pass" placeholder="Contraseña" style="width:100%;max-width:280px;padding:10px 14px;border:1.5px solid #dde3f0;border-radius:8px;font-size:15px;outline:none;text-align:center" onkeydown="if(event.key==='Enter')verificarPass()" />
+    <br><br>
+    <button onclick="verificarPass()" style="padding:10px 28px;background:#0f3460;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Entrar</button>
+    <div id="pass-error" style="color:#e94560;font-size:13px;margin-top:8px;display:none">Contraseña incorrecta</div>
+  </div>
+  <div id="admin-content" style="display:none">
   <div class="admin-note">⚙️ <strong>Solo organizador:</strong> ingresa los resultados reales. Al guardar se recalculan los puntos en Google Sheets.</div>
   <div id="toast-res" class="toast"></div>
   <div id="resultados-form"></div>
   <button class="btn-results" id="btn-res" onclick="guardarResultados()">✔️ Guardar resultados y recalcular</button>
+  </div><!-- /admin-content -->
 </div>
 
 <!-- REGLAS -->
@@ -323,7 +333,7 @@ async function guardarPronostico() {
 }
 
 // ── RANKING DESDE CSV PÚBLICO DE GOOGLE SHEETS ────────
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTJ8JZc8FlpPIeUyALcu_rZZ0hlUTAvCFE342Ve93ALZ3_65PRu5rOeNf2TEuHPFslPZ3Iyt_CsbNvg/pub?gid=0&single=true&output=csv';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTJ8JZc8FlpPIeUyALcu_rZZ0hlUTAvCFE342Ve93ALZ3_65PRu5rOeNf2TEuHPFslPZ3Iyt_CsbNvg/pub?gid=38873572&single=true&output=csv';
 
 async function cargarRanking() {
   document.getElementById('rank-body').innerHTML = '<div class="empty-rank">⏳ Cargando ranking...</div>';
@@ -427,6 +437,21 @@ function showToast(id, msg, ok) {
   t.textContent = msg;
   t.className = 'toast show ' + (ok ? 'ok' : 'err');
   setTimeout(() => t.className = 'toast', 4000);
+}
+
+// ── CONTRASEÑA ADMIN ─────────────────────────────────
+const ADMIN_PASS = 'visiting2026';
+function verificarPass() {
+  const val = document.getElementById('admin-pass').value;
+  if (val === ADMIN_PASS) {
+    document.getElementById('admin-lock').style.display = 'none';
+    document.getElementById('admin-content').style.display = 'block';
+    document.getElementById('pass-error').style.display = 'none';
+    renderResultados();
+  } else {
+    document.getElementById('pass-error').style.display = 'block';
+    document.getElementById('admin-pass').value = '';
+  }
 }
 
 // ── CARGAR RESULTADOS DESDE SHEETS AL INICIAR ────────

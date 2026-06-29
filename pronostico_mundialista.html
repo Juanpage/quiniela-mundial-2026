@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⚽ Pronóstico Mundialista Visiting Galapagos</title>
+<title>⚽ Pronóstico Mundialista Visiting Galápagos </title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; min-height: 100vh; }
@@ -102,7 +102,7 @@
 <body>
 
 <header>
-  <h1>⚽ Pronóstico Mundialista Visiting Galapagos</h1>
+  <h1>⚽ Pronóstico Mundialista Visiting Galápagos</h1>
   <p>Dieciseisavos de final · $3 por persona · Pozo $36</p>
 </header>
 
@@ -268,7 +268,7 @@ async function guardarPronostico() {
   if (!nombre) { showToast('toast-reg', '⚠️ Ingresa tu nombre antes de guardar.', false); return; }
 
   const data = { nombre };
-  let falta = false;
+  let alguno = false;
 
   PARTIDOS.forEach(p => {
     const res = resultados[p.id];
@@ -278,12 +278,13 @@ async function guardarPronostico() {
     }
     const hv = document.getElementById(`${p.id}_h`)?.value;
     const av = document.getElementById(`${p.id}_a`)?.value;
-    if (hv === '' || av === '') { falta = true; return; }
-    const w = picks[p.id] || (parseInt(hv) > parseInt(av) ? 'H' : parseInt(hv) === parseInt(av) ? 'D' : 'A');
+    // solo guarda si el usuario llenó ambos goles
+    if (hv === '' || av === '') { data[p.id] = '-'; return; }
     data[p.id] = `${hv}-${av}`;
+    alguno = true;
   });
 
-  if (falta) { showToast('toast-reg', '⚠️ Completa los marcadores de todos los partidos pendientes.', false); return; }
+  if (!alguno) { showToast('toast-reg', '⚠️ Ingresa al menos un pronóstico antes de guardar.', false); return; }
 
   // calcular puntos con resultados conocidos
   let puntos = 0;
@@ -291,8 +292,9 @@ async function guardarPronostico() {
     const res = resultados[p.id];
     if (!res) return;
     const val = data[p.id];
-    if (!val) return;
+    if (!val || val === '-') return; // sin pronóstico = 0 puntos
     const [ph, pa] = val.split('-').map(Number);
+    if (isNaN(ph) || isNaN(pa)) return;
     if (ph === res.h && pa === res.a) { puntos += 3; return; }
     const rw = res.h > res.a ? 'H' : res.h === res.a ? 'D' : 'A';
     const pw = ph > pa ? 'H' : ph === pa ? 'D' : 'A';

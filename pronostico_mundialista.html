@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Pronóstico Mundialista Visiting Galapagos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; min-height: 100vh; }
+  header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 1.5rem; text-align: center; }
+  header h1 { font-size: 26px; font-weight: 700; }
+  header p { font-size: 13px; opacity: .75; margin-top: 4px; }
+  .tabs-bar { display: flex; background: #fff; border-bottom: 2px solid #e8eaf6; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  .tab-btn { flex: 1; padding: 13px 4px; border: none; background: transparent; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; border-bottom: 3px solid transparent; transition: all .2s; }
+  .tab-btn.active { color: #0f3460; border-bottom-color: #e94560; }
+  .tab-btn:hover:not(.active) { background: #f5f7ff; }
+  .page { display: none; padding: 1.25rem; max-width: 800px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .name-card { background: #fff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .name-card label { font-size: 13px; color: #555; display: block; margin-bottom: 6px; font-weight: 600; }
+  .name-card input { width: 100%; padding: 10px 14px; border: 1.5px solid #dde3f0; border-radius: 8px; font-size: 15px; outline: none; transition: border .2s; }
+  .name-card input:focus { border-color: #0f3460; }
+
+  .dia-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .08em; margin: 1.25rem 0 6px; padding-left: 2px; }
+  .match-card { background: #fff; border-radius: 10px; padding: 1rem; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.06); border-left: 4px solid #e8eaf6; }
+  .match-card.today { border-left-color: #e94560; }
+  .match-card.played { border-left-color: #28a745; background: #f8fff9; }
+  .match-title { font-size: 12px; color: #888; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .badge-live { background: #e94560; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+  .badge-played { background: #28a745; color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+  .teams-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; }
+  .team-name { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+  .team-name.right { text-align: right; }
+  .score-box { display: flex; align-items: center; gap: 5px; }
+  .score-box input { width: 44px; text-align: center; padding: 6px 2px; font-size: 18px; font-weight: 700; border: 1.5px solid #dde3f0; border-radius: 6px; outline: none; color: #0f3460; }
+  .score-box input:focus { border-color: #0f3460; }
+  .score-dash { font-size: 16px; color: #aaa; font-weight: 700; }
+  .played-result { font-size: 22px; font-weight: 700; color: #28a745; text-align: center; }
+  .winner-btns { display: flex; gap: 5px; margin-top: 8px; }
+  .wbtn { flex: 1; padding: 6px 4px; font-size: 11px; font-weight: 600; border: 1.5px solid #dde3f0; border-radius: 6px; background: #fff; color: #555; cursor: pointer; transition: all .15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wbtn.sel-h { background: #e8f0fe; border-color: #4285f4; color: #1a56db; }
+  .wbtn.sel-d { background: #fff8e1; border-color: #f6a200; color: #856404; }
+  .wbtn.sel-a { background: #e8f5e9; border-color: #28a745; color: #155724; }
+
+  .btn-save { width: 100%; padding: 14px; background: linear-gradient(135deg, #0f3460, #e94560); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: opacity .2s; }
+  .btn-save:hover { opacity: .9; }
+  .btn-save:disabled { opacity: .5; cursor: not-allowed; }
+
+  .toast { display: none; text-align: center; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; margin-bottom: 1rem; }
+  .toast.ok { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+  .toast.err { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  .toast.show { display: block; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .stat-box { background: #fff; border-radius: 10px; padding: 1rem; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+  .stat-num { font-size: 24px; font-weight: 700; color: #0f3460; }
+  .stat-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+  .rank-table { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.07); }
+  .rank-row { display: grid; grid-template-columns: 36px 1fr 60px 70px; align-items: center; padding: 11px 14px; border-bottom: 1px solid #f0f0f0; gap: 8px; }
+  .rank-row:last-child { border-bottom: none; }
+  .rank-row.header { background: #0f3460; color: white; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 14px; }
+  .rank-row.gold { background: #fffbea; }
+  .rank-row.silver { background: #f8f8f8; }
+  .rank-row.bronze { background: #fff5f0; }
+  .pos { font-size: 16px; font-weight: 700; text-align: center; }
+  .pname { font-size: 14px; font-weight: 600; }
+  .pts { font-size: 14px; font-weight: 700; color: #0f3460; text-align: center; }
+  .premio { font-size: 13px; font-weight: 700; color: #28a745; text-align: right; }
+  .empty-rank { padding: 2rem; text-align: center; color: #aaa; font-size: 14px; }
+  .btn-refresh { width: 100%; padding: 13px; background: #0f3460; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: opacity .2s; }
+  .btn-refresh:hover { opacity: .9; }
+
+  .admin-note { background: #fff8e1; border: 1.5px solid #f6a200; border-radius: 8px; padding: .75rem 1rem; font-size: 13px; color: #856404; margin-bottom: 1rem; }
+  .result-card { background: #fff; border-radius: 10px; padding: 1rem; margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+  .result-match { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #333; }
+  .result-inputs { display: flex; align-items: center; gap: 8px; }
+  .result-inputs input { width: 52px; text-align: center; padding: 7px; font-size: 17px; font-weight: 700; border: 1.5px solid #dde3f0; border-radius: 6px; outline: none; color: #1d7a3c; }
+  .result-inputs input:focus { border-color: #1d7a3c; }
+  .result-inputs .label { font-size: 13px; color: #888; }
+  .btn-results { width: 100%; padding: 13px; background: #1d7a3c; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 1rem; transition: opacity .2s; }
+  .btn-results:hover { opacity: .9; }
+
+  .rules-card { background: #fff; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+  .rules-card h3 { font-size: 15px; font-weight: 700; color: #0f3460; margin-bottom: 10px; }
+  .rules-card ul { list-style: none; }
+  .rules-card ul li { font-size: 13px; color: #444; padding: 5px 0 5px 18px; position: relative; border-bottom: 1px solid #f5f5f5; }
+  .rules-card ul li:last-child { border-bottom: none; }
+  .rules-card ul li::before { content: "▸"; color: #e94560; position: absolute; left: 0; }
+  .prize-box { background: linear-gradient(135deg, #0f3460, #e94560); color: white; border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
+  .prize-total { font-size: 38px; font-weight: 800; }
+  .prize-sub { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .prize-dist { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 1rem; }
+  .prize-item { background: rgba(255,255,255,.15); border-radius: 8px; padding: .75rem; }
+  .prize-item .place { font-size: 11px; opacity: .8; }
+  .prize-item .amount { font-size: 18px; font-weight: 700; margin-top: 2px; }
+
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚽ Pronóstico Mundialista Visiting Galapagos</h1>
+  <p>Dieciseisavos de final · $3 por persona · Pozo $36</p>
+</header>
+
+<div class="tabs-bar">
+  <button class="tab-btn active" onclick="showTab('registro',this)">📝 Pronóstico</button>
+  <button class="tab-btn" onclick="showTab('ranking',this)">🏆 Ranking</button>
+  <button class="tab-btn" onclick="showTab('resultados',this)">⚙️ Resultados</button>
+  <button class="tab-btn" onclick="showTab('reglas',this)">📋 Reglas</button>
+</div>
+
+<!-- PRONÓSTICO -->
+<div id="tab-registro" class="page active">
+  <div class="name-card">
+    <label>👤 Tu nombre completo</label>
+    <input type="text" id="nombre" placeholder="Ej: Juan Guzmán" autocomplete="off" />
+  </div>
+  <div id="toast-reg" class="toast"></div>
+  <div id="partidos-form"></div>
+  <button class="btn-save" id="btn-guardar" onclick="guardarPronostico()">💾 Guardar mi pronóstico</button>
+</div>
+
+<!-- RANKING -->
+<div id="tab-ranking" class="page">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-num" id="st-n">—</div><div class="stat-lbl">Participantes</div></div>
+    <div class="stat-box"><div class="stat-num" id="st-p">—</div><div class="stat-lbl">Pozo total</div></div>
+    <div class="stat-box"><div class="stat-num" id="st-g">—</div><div class="stat-lbl">Premio 1°</div></div>
+  </div>
+  <div class="rank-table">
+    <div class="rank-row header">
+      <div>Pos</div><div>Nombre</div><div style="text-align:center">Pts</div><div style="text-align:right">Premio</div>
+    </div>
+    <div id="rank-body"><div class="empty-rank">Cargando ranking...</div></div>
+  </div>
+  <button class="btn-refresh" onclick="cargarRanking()">🔄 Actualizar ranking</button>
+</div>
+
+<!-- RESULTADOS -->
+<div id="tab-resultados" class="page">
+  <div class="admin-note">⚙️ <strong>Solo organizador:</strong> ingresa los resultados reales. Al guardar se recalculan los puntos en Google Sheets.</div>
+  <div id="toast-res" class="toast"></div>
+  <div id="resultados-form"></div>
+  <button class="btn-results" id="btn-res" onclick="guardarResultados()">✔️ Guardar resultados y recalcular</button>
+</div>
+
+<!-- REGLAS -->
+<div id="tab-reglas" class="page">
+  <div class="prize-box">
+    <div class="prize-total">$36</div>
+    <div class="prize-sub">Pozo total (12 personas × $3)</div>
+    <div class="prize-dist">
+      <div class="prize-item"><div class="place">🥇 1° lugar (60%)</div><div class="amount">$21.60</div></div>
+      <div class="prize-item"><div class="place">🥈 2° lugar (25%)</div><div class="amount">$9.00</div></div>
+      <div class="prize-item"><div class="place">🥉 3° lugar (15%)</div><div class="amount">$5.40</div></div>
+    </div>
+  </div>
+  <div class="rules-card">
+    <h3>⚽ Sistema de puntos</h3>
+    <ul>
+      <li><strong>3 puntos</strong> — Marcador exacto correcto (ej: pronosticaste 2-1 y fue 2-1)</li>
+      <li><strong>1 punto</strong> — Ganador o empate correcto, marcador incorrecto</li>
+      <li><strong>0 puntos</strong> — Pronóstico incorrecto</li>
+    </ul>
+  </div>
+  <div class="rules-card">
+    <h3>📋 Cómo participar</h3>
+    <ul>
+      <li>Entrega $3 al organizador</li>
+      <li>Abre este archivo en tu celular o computadora</li>
+      <li>Llena tus pronósticos y presiona "Guardar"</li>
+      <li>El ranking se actualiza en tiempo real para todos</li>
+      <li>Al final de los 16avos se reparte el pozo</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwUywygBO1gxQhRdCrkFU5xv7uvZm6Pl7JgsLrkYN6obIQ-1Hzo2PGcBYmLEtJrXaE3Sw/exec';
+
+const PARTIDOS = [
+  { id:'p01', dia:'Dom 29 jun', h:'🇨🇦 Canadá',          a:'🇿🇦 Sudáfrica',       today:true  },
+  { id:'p02', dia:'Dom 29 jun', h:'🇧🇷 Brasil',           a:'🇯🇵 Japón',           today:true  },
+  { id:'p03', dia:'Dom 29 jun', h:'🇩🇪 Alemania',         a:'🇵🇾 Paraguay',        today:false },
+  { id:'p04', dia:'Dom 29 jun', h:'🇳🇱 Países Bajos',     a:'🇲🇦 Marruecos',       today:false },
+  { id:'p05', dia:'Lun 30 jun', h:'🇨🇮 Costa de Marfil',  a:'🇳🇴 Noruega',         today:false },
+  { id:'p06', dia:'Lun 30 jun', h:'🇫🇷 Francia',          a:'🇸🇪 Suecia',          today:false },
+  { id:'p07', dia:'Lun 30 jun', h:'🇲🇽 México',           a:'🇪🇨 Ecuador',         today:false },
+  { id:'p08', dia:'Mar 1 jul',  h:'🇧🇪 Bélgica',          a:'🇸🇳 Senegal',         today:false },
+  { id:'p09', dia:'Mar 1 jul',  h:'🇺🇸 Estados Unidos',   a:'🇧🇦 Bosnia y Herz.',  today:false },
+  { id:'p10', dia:'Mar 1 jul',  h:'🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra',      a:'🇨🇩 RD Congo',        today:false },
+  { id:'p11', dia:'Mié 2 jul',  h:'🇪🇸 España',           a:'🇦🇹 Austria',         today:false },
+  { id:'p12', dia:'Mié 2 jul',  h:'🇵🇹 Portugal',         a:'🇭🇷 Croacia',         today:false },
+  { id:'p13', dia:'Mié 2 jul',  h:'🇨🇭 Suiza',            a:'🇩🇿 Argelia',         today:false },
+  { id:'p14', dia:'Jue 3 jul',  h:'🇦🇺 Australia',        a:'🇪🇬 Egipto',          today:false },
+  { id:'p15', dia:'Jue 3 jul',  h:'🇦🇷 Argentina',        a:'🇨🇻 Cabo Verde',      today:false },
+  { id:'p16', dia:'Jue 3 jul',  h:'🇨🇴 Colombia',         a:'🇬🇭 Ghana',           today:false },
+];
+
+// resultados reales guardados localmente por el organizador
+let resultados = {};
+try { resultados = JSON.parse(localStorage.getItem('q26_res') || '{}'); } catch(e){}
+
+const picks = {};
+
+// ── TABS ──────────────────────────────────────────────
+function showTab(t, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + t).classList.add('active');
+  el.classList.add('active');
+  if (t === 'ranking') cargarRanking();
+  if (t === 'resultados') renderResultados();
+}
+
+// ── FORMULARIO DE PRONÓSTICO ──────────────────────────
+function renderForm() {
+  let html = '', lastDia = '';
+  PARTIDOS.forEach(p => {
+    if (p.dia !== lastDia) { html += `<div class="dia-label">${p.dia}</div>`; lastDia = p.dia; }
+    const res = resultados[p.id];
+    const played = res !== undefined;
+    const hname = p.h.replace(/^\S+\s/, '');
+    const aname = p.a.replace(/^\S+\s/, '');
+    html += `<div class="match-card ${played ? 'played' : p.today ? 'today' : ''}">
+      <div class="match-title">
+        <span>${p.h} <strong>vs</strong> ${p.a}</span>
+        ${played ? `<span class="badge-played">Jugado ${res.h}-${res.a}</span>` : p.today ? `<span class="badge-live">HOY</span>` : ''}
+      </div>`;
+    if (played) {
+      html += `<div class="played-result">${res.h} - ${res.a}</div>`;
+    } else {
+      html += `<div class="teams-row">
+          <div class="team-name">${p.h}</div>
+          <div class="score-box">
+            <input type="number" id="${p.id}_h" min="0" max="20" placeholder="0" />
+            <span class="score-dash">-</span>
+            <input type="number" id="${p.id}_a" min="0" max="20" placeholder="0" />
+          </div>
+          <div class="team-name right">${p.a}</div>
+        </div>
+        <div class="winner-btns">
+          <button class="wbtn" id="${p.id}_bH" onclick="pickW('${p.id}','H')">${hname}</button>
+          <button class="wbtn" id="${p.id}_bD" onclick="pickW('${p.id}','D')">Empate</button>
+          <button class="wbtn" id="${p.id}_bA" onclick="pickW('${p.id}','A')">${aname}</button>
+        </div>`;
+    }
+    html += `</div>`;
+  });
+  document.getElementById('partidos-form').innerHTML = html;
+}
+
+function pickW(id, val) {
+  picks[id] = val;
+  ['H','D','A'].forEach(v => {
+    const b = document.getElementById(`${id}_b${v}`);
+    if (b) b.className = 'wbtn' + (v === val ? (v==='H' ? ' sel-h' : v==='D' ? ' sel-d' : ' sel-a') : '');
+  });
+}
+
+// ── GUARDAR PRONÓSTICO → GOOGLE SHEETS ───────────────
+async function guardarPronostico() {
+  const nombre = document.getElementById('nombre').value.trim();
+  if (!nombre) { showToast('toast-reg', '⚠️ Ingresa tu nombre antes de guardar.', false); return; }
+
+  const data = { nombre };
+  let falta = false;
+
+  PARTIDOS.forEach(p => {
+    const res = resultados[p.id];
+    if (res !== undefined) {
+      data[p.id] = `${res.h}-${res.a}`;
+      return;
+    }
+    const hv = document.getElementById(`${p.id}_h`)?.value;
+    const av = document.getElementById(`${p.id}_a`)?.value;
+    if (hv === '' || av === '') { falta = true; return; }
+    const w = picks[p.id] || (parseInt(hv) > parseInt(av) ? 'H' : parseInt(hv) === parseInt(av) ? 'D' : 'A');
+    data[p.id] = `${hv}-${av}`;
+  });
+
+  if (falta) { showToast('toast-reg', '⚠️ Completa los marcadores de todos los partidos pendientes.', false); return; }
+
+  // calcular puntos con resultados conocidos
+  let puntos = 0;
+  PARTIDOS.forEach(p => {
+    const res = resultados[p.id];
+    if (!res) return;
+    const val = data[p.id];
+    if (!val) return;
+    const [ph, pa] = val.split('-').map(Number);
+    if (ph === res.h && pa === res.a) { puntos += 3; return; }
+    const rw = res.h > res.a ? 'H' : res.h === res.a ? 'D' : 'A';
+    const pw = ph > pa ? 'H' : ph === pa ? 'D' : 'A';
+    if (pw === rw) puntos += 1;
+  });
+  data.puntos = puntos;
+
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Guardando...';
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    showToast('toast-reg', '✅ Pronóstico guardado en Google Sheets. ¡Buena suerte!', true);
+  } catch(e) {
+    showToast('toast-reg', '❌ Error de conexión. Verifica tu internet e intenta de nuevo.', false);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '💾 Guardar mi pronóstico';
+}
+
+// ── RANKING DESDE GOOGLE SHEETS ───────────────────────
+async function cargarRanking() {
+  document.getElementById('rank-body').innerHTML = '<div class="empty-rank">⏳ Cargando ranking desde Google Sheets...</div>';
+  document.getElementById('st-n').textContent = '—';
+  document.getElementById('st-p').textContent = '—';
+  document.getElementById('st-g').textContent = '—';
+
+  try {
+    const res = await fetch(SHEET_URL + '?action=ranking');
+    const json = await res.json();
+    renderRanking(json.participantes || []);
+  } catch(e) {
+    document.getElementById('rank-body').innerHTML = '<div class="empty-rank">❌ No se pudo cargar. Verifica conexión.</div>';
+  }
+}
+
+function renderRanking(lista) {
+  const sorted = [...lista].sort((a, b) => b.puntos - a.puntos);
+  const n = sorted.length;
+  const pozo = n * 3;
+  document.getElementById('st-n').textContent = n;
+  document.getElementById('st-p').textContent = '$' + pozo;
+  document.getElementById('st-g').textContent = '$' + Math.round(pozo * 0.6);
+
+  if (!sorted.length) {
+    document.getElementById('rank-body').innerHTML = '<div class="empty-rank">Aún no hay pronósticos registrados.</div>';
+    return;
+  }
+  const premios = [Math.round(pozo * 0.60), Math.round(pozo * 0.25), Math.round(pozo * 0.15)];
+  const medals  = ['🥇','🥈','🥉'];
+  const classes = ['gold','silver','bronze'];
+  document.getElementById('rank-body').innerHTML = sorted.map((p, i) => `
+    <div class="rank-row ${i < 3 ? classes[i] : ''}">
+      <div class="pos">${i < 3 ? medals[i] : i+1}</div>
+      <div class="pname">${p.nombre}</div>
+      <div class="pts">${p.puntos}</div>
+      <div class="premio">${i < 3 ? '$'+premios[i] : ''}</div>
+    </div>`).join('');
+}
+
+// ── RESULTADOS (organizador) ──────────────────────────
+function renderResultados() {
+  let html = '', lastDia = '';
+  PARTIDOS.forEach(p => {
+    if (p.dia !== lastDia) { html += `<div class="dia-label">${p.dia}</div>`; lastDia = p.dia; }
+    const res = resultados[p.id];
+    html += `<div class="result-card">
+      <div class="result-match">${p.h} vs ${p.a}</div>
+      <div class="result-inputs">
+        <span class="label">Local</span>
+        <input type="number" id="r_${p.id}_h" min="0" max="20" value="${res !== undefined ? res.h : ''}" placeholder="0" />
+        <span class="label">–</span>
+        <input type="number" id="r_${p.id}_a" min="0" max="20" value="${res !== undefined ? res.a : ''}" placeholder="0" />
+        <span class="label">Visitante</span>
+      </div>
+    </div>`;
+  });
+  document.getElementById('resultados-form').innerHTML = html;
+}
+
+async function guardarResultados() {
+  PARTIDOS.forEach(p => {
+    const hv = document.getElementById(`r_${p.id}_h`)?.value;
+    const av = document.getElementById(`r_${p.id}_a`)?.value;
+    if (hv !== '' && av !== '') resultados[p.id] = { h: parseInt(hv)||0, a: parseInt(av)||0 };
+  });
+  localStorage.setItem('q26_res', JSON.stringify(resultados));
+
+  const btn = document.getElementById('btn-res');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Recalculando...';
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'recalcular', resultados })
+    });
+    showToast('toast-res', '✅ Resultados guardados. El ranking se actualizará al refrescar.', true);
+    renderForm();
+  } catch(e) {
+    showToast('toast-res', '❌ Error al conectar. Los resultados se guardaron localmente.', false);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✔️ Guardar resultados y recalcular';
+}
+
+// ── UTILIDADES ────────────────────────────────────────
+function showToast(id, msg, ok) {
+  const t = document.getElementById(id);
+  t.textContent = msg;
+  t.className = 'toast show ' + (ok ? 'ok' : 'err');
+  setTimeout(() => t.className = 'toast', 4000);
+}
+
+// INIT
+renderForm();
+</script>
+</body>
+</html>
